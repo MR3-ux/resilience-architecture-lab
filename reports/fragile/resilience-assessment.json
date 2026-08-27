@@ -1,0 +1,123 @@
+{
+  "architecture_name": "Single-Region Checkout",
+  "score": {
+    "objectives": 15,
+    "redundancy": 0,
+    "failover": 0,
+    "data_protection": 0,
+    "observability": 0,
+    "dependency_resilience": 4,
+    "total": 19
+  },
+  "rating": "fragile",
+  "findings": [
+    {
+      "severity": "critical",
+      "category": "redundancy",
+      "component_id": "web",
+      "title": "Critical component is a single point of failure",
+      "evidence": "Single Web Server has one replica in eastus.",
+      "recommendation": "Add failure-domain redundancy and document the traffic or workload failover path."
+    },
+    {
+      "severity": "high",
+      "category": "failover",
+      "component_id": "web",
+      "title": "No health signal drives failover",
+      "evidence": "The component is critical but health_check is false.",
+      "recommendation": "Define an end-to-end health probe that validates dependencies and customer-serving behavior."
+    },
+    {
+      "severity": "medium",
+      "category": "observability",
+      "component_id": "web",
+      "title": "Critical telemetry coverage is incomplete",
+      "evidence": "Missing signals: alerts, metrics.",
+      "recommendation": "Instrument golden signals, structured logs, and actionable alerts tied to the service objectives."
+    },
+    {
+      "severity": "high",
+      "category": "dependency",
+      "component_id": "web",
+      "title": "Critical path depends on a single-instance service",
+      "evidence": "Single Web Server requires Single Database, which has no failure-domain redundancy.",
+      "recommendation": "Remove the dependency SPOF, add a degraded mode, or make the dependency redundant."
+    },
+    {
+      "severity": "high",
+      "category": "redundancy",
+      "component_id": "database",
+      "title": "Critical component is a single point of failure",
+      "evidence": "Single Database has one replica in eastus.",
+      "recommendation": "Add failure-domain redundancy and document the traffic or workload failover path."
+    },
+    {
+      "severity": "high",
+      "category": "failover",
+      "component_id": "database",
+      "title": "No health signal drives failover",
+      "evidence": "The component is critical but health_check is false.",
+      "recommendation": "Define an end-to-end health probe that validates dependencies and customer-serving behavior."
+    },
+    {
+      "severity": "high",
+      "category": "data-protection",
+      "component_id": "database",
+      "title": "Data protection does not meet the system RPO",
+      "evidence": "Best documented RPO is 1440 minutes; target is 5.",
+      "recommendation": "Improve replication or backup frequency and prove recovery with a restore test."
+    },
+    {
+      "severity": "medium",
+      "category": "observability",
+      "component_id": "database",
+      "title": "Critical telemetry coverage is incomplete",
+      "evidence": "Missing signals: alerts, metrics.",
+      "recommendation": "Instrument golden signals, structured logs, and actionable alerts tied to the service objectives."
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "region-loss",
+      "scenario_name": "East US regional outage",
+      "system_status": "OUTAGE",
+      "service_restoration_minutes": 240,
+      "estimated_data_loss_minutes": 1440,
+      "rto_met": false,
+      "rpo_met": false,
+      "outcomes": [
+        {
+          "component_id": "web",
+          "state": "unavailable",
+          "reason": "Region 'eastus' contains all available instances and no viable automated failover remains."
+        },
+        {
+          "component_id": "database",
+          "state": "unavailable",
+          "reason": "Region 'eastus' contains all available instances and no viable automated failover remains."
+        }
+      ]
+    },
+    {
+      "scenario_id": "database-loss",
+      "scenario_name": "Database outage",
+      "system_status": "OUTAGE",
+      "service_restoration_minutes": 120,
+      "estimated_data_loss_minutes": 1440,
+      "rto_met": false,
+      "rpo_met": false,
+      "outcomes": [
+        {
+          "component_id": "web",
+          "state": "unavailable",
+          "reason": "Required dependency unavailable: database."
+        },
+        {
+          "component_id": "database",
+          "state": "unavailable",
+          "reason": "Direct outage of component 'database'."
+        }
+      ]
+    }
+  ]
+}
