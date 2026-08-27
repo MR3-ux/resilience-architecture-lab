@@ -1,0 +1,271 @@
+{
+  "architecture_name": "Atlas Customer Portal",
+  "score": {
+    "objectives": 15,
+    "redundancy": 20,
+    "failover": 20,
+    "data_protection": 20,
+    "observability": 15,
+    "dependency_resilience": 10,
+    "total": 100
+  },
+  "rating": "production-minded",
+  "findings": [],
+  "scenarios": [
+    {
+      "scenario_id": "east-region-loss",
+      "scenario_name": "East US regional outage",
+      "system_status": "DEGRADED",
+      "service_restoration_minutes": 2,
+      "estimated_data_loss_minutes": 1,
+      "rto_met": true,
+      "rpo_met": true,
+      "outcomes": [
+        {
+          "component_id": "front-door",
+          "state": "degraded",
+          "reason": "One or more required dependencies are degraded or unavailable, but service can continue."
+        },
+        {
+          "component_id": "app-east",
+          "state": "unavailable",
+          "reason": "Region 'eastus' contains all available instances and no viable automated failover remains."
+        },
+        {
+          "component_id": "app-west",
+          "state": "degraded",
+          "reason": "One or more required dependencies are degraded or unavailable, but service can continue."
+        },
+        {
+          "component_id": "cosmos",
+          "state": "degraded",
+          "reason": "Region 'eastus' is unavailable; automated failover to westus2 is expected in 2 minutes."
+        },
+        {
+          "component_id": "identity",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-east",
+          "state": "unavailable",
+          "reason": "Region 'eastus' contains all available instances and no viable automated failover remains."
+        },
+        {
+          "component_id": "key-vault-west",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "observability",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        }
+      ]
+    },
+    {
+      "scenario_id": "west-region-loss",
+      "scenario_name": "West US 2 regional outage",
+      "system_status": "DEGRADED",
+      "service_restoration_minutes": 2,
+      "estimated_data_loss_minutes": 1,
+      "rto_met": true,
+      "rpo_met": true,
+      "outcomes": [
+        {
+          "component_id": "front-door",
+          "state": "degraded",
+          "reason": "One or more required dependencies are degraded or unavailable, but service can continue."
+        },
+        {
+          "component_id": "app-east",
+          "state": "degraded",
+          "reason": "One or more required dependencies are degraded or unavailable, but service can continue."
+        },
+        {
+          "component_id": "app-west",
+          "state": "unavailable",
+          "reason": "Region 'westus2' contains all available instances and no viable automated failover remains."
+        },
+        {
+          "component_id": "cosmos",
+          "state": "degraded",
+          "reason": "Region 'westus2' is unavailable; automated failover to eastus is expected in 2 minutes."
+        },
+        {
+          "component_id": "identity",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-east",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-west",
+          "state": "unavailable",
+          "reason": "Region 'westus2' contains all available instances and no viable automated failover remains."
+        },
+        {
+          "component_id": "observability",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        }
+      ]
+    },
+    {
+      "scenario_id": "database-loss",
+      "scenario_name": "Cosmos DB logical service outage",
+      "system_status": "OUTAGE",
+      "service_restoration_minutes": 20,
+      "estimated_data_loss_minutes": 15,
+      "rto_met": true,
+      "rpo_met": false,
+      "outcomes": [
+        {
+          "component_id": "front-door",
+          "state": "unavailable",
+          "reason": "All alternative required dependencies are unavailable."
+        },
+        {
+          "component_id": "app-east",
+          "state": "unavailable",
+          "reason": "Required dependency unavailable: cosmos."
+        },
+        {
+          "component_id": "app-west",
+          "state": "unavailable",
+          "reason": "Required dependency unavailable: cosmos."
+        },
+        {
+          "component_id": "cosmos",
+          "state": "unavailable",
+          "reason": "Direct outage of component 'cosmos'."
+        },
+        {
+          "component_id": "identity",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-east",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-west",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "observability",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        }
+      ]
+    },
+    {
+      "scenario_id": "identity-loss",
+      "scenario_name": "Identity provider outage",
+      "system_status": "OUTAGE",
+      "service_restoration_minutes": 10,
+      "estimated_data_loss_minutes": 0,
+      "rto_met": true,
+      "rpo_met": true,
+      "outcomes": [
+        {
+          "component_id": "front-door",
+          "state": "unavailable",
+          "reason": "All alternative required dependencies are unavailable."
+        },
+        {
+          "component_id": "app-east",
+          "state": "unavailable",
+          "reason": "Required dependency unavailable: identity."
+        },
+        {
+          "component_id": "app-west",
+          "state": "unavailable",
+          "reason": "Required dependency unavailable: identity."
+        },
+        {
+          "component_id": "cosmos",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "identity",
+          "state": "unavailable",
+          "reason": "Direct outage of component 'identity'."
+        },
+        {
+          "component_id": "key-vault-east",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-west",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "observability",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        }
+      ]
+    },
+    {
+      "scenario_id": "edge-loss",
+      "scenario_name": "Global edge component outage",
+      "system_status": "OUTAGE",
+      "service_restoration_minutes": 5,
+      "estimated_data_loss_minutes": 0,
+      "rto_met": true,
+      "rpo_met": true,
+      "outcomes": [
+        {
+          "component_id": "front-door",
+          "state": "unavailable",
+          "reason": "Direct outage of component 'front-door'."
+        },
+        {
+          "component_id": "app-east",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "app-west",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "cosmos",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "identity",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-east",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "key-vault-west",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        },
+        {
+          "component_id": "observability",
+          "state": "operational",
+          "reason": "No failure impact detected."
+        }
+      ]
+    }
+  ]
+}
