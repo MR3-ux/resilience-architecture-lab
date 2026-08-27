@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/resilience-architecture-lab/architecture.schema.json",
+  "title": "Resilience Architecture Specification",
+  "type": "object",
+  "required": ["system"],
+  "properties": {
+    "system": {
+      "type": "object",
+      "required": ["name", "objectives", "entrypoints", "components", "scenarios"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": "string"},
+        "business_impact": {"type": "string"},
+        "owners": {"type": "array", "items": {"type": "string"}},
+        "objectives": {
+          "type": "object",
+          "required": ["availability_target", "rto_minutes", "rpo_minutes"],
+          "properties": {
+            "availability_target": {"type": "number", "exclusiveMinimum": 0, "maximum": 100},
+            "rto_minutes": {"type": "integer", "minimum": 1},
+            "rpo_minutes": {"type": "integer", "minimum": 0}
+          }
+        },
+        "entrypoints": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "components": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/component"}},
+        "scenarios": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/scenario"}},
+        "assumptions": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "$defs": {
+    "dependency": {
+      "type": "object",
+      "required": ["component_id"],
+      "properties": {
+        "component_id": {"type": "string"},
+        "required": {"type": "boolean", "default": true}
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": ["id", "name", "kind", "regions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "critical": {"type": "boolean"},
+        "regions": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "replicas": {"type": "integer", "minimum": 1},
+        "dependency_policy": {"enum": ["all", "any"]},
+        "dependencies": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
+        "health_check": {"type": "boolean"},
+        "automated_failover": {"type": "boolean"},
+        "failover_minutes": {"type": "integer", "minimum": 0},
+        "recovery_minutes": {"type": "integer", "minimum": 0},
+        "stateful": {"type": "boolean"},
+        "replication_rpo_minutes": {"type": ["integer", "null"], "minimum": 0},
+        "backup_rpo_minutes": {"type": ["integer", "null"], "minimum": 0},
+        "telemetry": {"type": "array", "items": {"enum": ["metrics", "logs", "alerts", "traces"]}}
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["id", "name", "kind", "target"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "kind": {"enum": ["region_outage", "component_outage"]},
+        "target": {"type": "string"},
+        "duration_minutes": {"type": "integer", "minimum": 1},
+        "description": {"type": "string"}
+      }
+    }
+  }
+}
