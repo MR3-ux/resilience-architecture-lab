@@ -1,0 +1,72 @@
+{
+  "$schema": "../schemas/architecture.schema.json",
+  "system": {
+    "name": "Single-Region Checkout",
+    "description": "An intentionally fragile architecture used to demonstrate design findings and failed objectives.",
+    "business_impact": "Checkout downtime stops revenue and may lose accepted orders.",
+    "owners": ["Application Team"],
+    "objectives": {
+      "availability_target": 99.9,
+      "rto_minutes": 15,
+      "rpo_minutes": 5
+    },
+    "entrypoints": ["web"],
+    "assumptions": ["This example is intentionally weak and must not be copied into production."],
+    "components": [
+      {
+        "id": "web",
+        "name": "Single Web Server",
+        "kind": "compute",
+        "critical": true,
+        "regions": ["eastus"],
+        "replicas": 1,
+        "dependency_policy": "all",
+        "dependencies": [{"component_id": "database", "required": true}],
+        "health_check": false,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 90,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["logs"]
+      },
+      {
+        "id": "database",
+        "name": "Single Database",
+        "kind": "data",
+        "critical": true,
+        "regions": ["eastus"],
+        "replicas": 1,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": false,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 120,
+        "stateful": true,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": 1440,
+        "telemetry": ["logs"]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "region-loss",
+        "name": "East US regional outage",
+        "kind": "region_outage",
+        "target": "eastus",
+        "duration_minutes": 240,
+        "description": "Demonstrates total system loss from a single failure domain."
+      },
+      {
+        "id": "database-loss",
+        "name": "Database outage",
+        "kind": "component_outage",
+        "target": "database",
+        "duration_minutes": 120,
+        "description": "Demonstrates dependency failure propagation and unacceptable data loss."
+      }
+    ]
+  }
+}
