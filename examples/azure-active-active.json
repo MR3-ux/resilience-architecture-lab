@@ -1,0 +1,222 @@
+{
+  "$schema": "../schemas/architecture.schema.json",
+  "system": {
+    "name": "Atlas Customer Portal",
+    "description": "An Azure active-active web platform designed to preserve customer access during regional and component failures.",
+    "business_impact": "An outage blocks customer transactions and creates revenue, support, and contractual availability impact.",
+    "owners": ["Platform Engineering", "Site Reliability Engineering"],
+    "objectives": {
+      "availability_target": 99.95,
+      "rto_minutes": 30,
+      "rpo_minutes": 5
+    },
+    "entrypoints": ["front-door"],
+    "assumptions": [
+      "Each application region has tested capacity to carry 100 percent of peak production traffic.",
+      "Azure Front Door health probes validate a dependency-aware application health endpoint.",
+      "Cosmos DB uses multi-region writes and continuous backup; restore exercises are performed quarterly.",
+      "The values in this example are design assumptions for demonstration, not measured production evidence."
+    ],
+    "components": [
+      {
+        "id": "front-door",
+        "name": "Azure Front Door Premium",
+        "kind": "edge",
+        "critical": true,
+        "regions": ["global"],
+        "replicas": 2,
+        "dependency_policy": "any",
+        "dependencies": [
+          {"component_id": "app-east", "required": true},
+          {"component_id": "app-west", "required": true}
+        ],
+        "health_check": true,
+        "automated_failover": true,
+        "failover_minutes": 2,
+        "recovery_minutes": 5,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "app-east",
+        "name": "App Service - East US",
+        "kind": "compute",
+        "critical": true,
+        "regions": ["eastus"],
+        "replicas": 3,
+        "dependency_policy": "all",
+        "dependencies": [
+          {"component_id": "cosmos", "required": true},
+          {"component_id": "identity", "required": true},
+          {"component_id": "key-vault-east", "required": true},
+          {"component_id": "observability", "required": false}
+        ],
+        "health_check": true,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 45,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "app-west",
+        "name": "App Service - West US 2",
+        "kind": "compute",
+        "critical": true,
+        "regions": ["westus2"],
+        "replicas": 3,
+        "dependency_policy": "all",
+        "dependencies": [
+          {"component_id": "cosmos", "required": true},
+          {"component_id": "identity", "required": true},
+          {"component_id": "key-vault-west", "required": true},
+          {"component_id": "observability", "required": false}
+        ],
+        "health_check": true,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 45,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "cosmos",
+        "name": "Azure Cosmos DB",
+        "kind": "data",
+        "critical": true,
+        "regions": ["eastus", "westus2"],
+        "replicas": 4,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": true,
+        "automated_failover": true,
+        "failover_minutes": 2,
+        "recovery_minutes": 20,
+        "stateful": true,
+        "replication_rpo_minutes": 1,
+        "backup_rpo_minutes": 15,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "identity",
+        "name": "Microsoft Entra ID",
+        "kind": "identity",
+        "critical": true,
+        "regions": ["global"],
+        "replicas": 2,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": true,
+        "automated_failover": true,
+        "failover_minutes": 1,
+        "recovery_minutes": 10,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "key-vault-east",
+        "name": "Azure Key Vault - East US",
+        "kind": "secrets",
+        "critical": false,
+        "regions": ["eastus"],
+        "replicas": 2,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": true,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 60,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "key-vault-west",
+        "name": "Azure Key Vault - West US 2",
+        "kind": "secrets",
+        "critical": false,
+        "regions": ["westus2"],
+        "replicas": 2,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": true,
+        "automated_failover": false,
+        "failover_minutes": 0,
+        "recovery_minutes": 60,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      },
+      {
+        "id": "observability",
+        "name": "Application Insights and Log Analytics",
+        "kind": "observability",
+        "critical": false,
+        "regions": ["global"],
+        "replicas": 2,
+        "dependency_policy": "all",
+        "dependencies": [],
+        "health_check": true,
+        "automated_failover": true,
+        "failover_minutes": 2,
+        "recovery_minutes": 15,
+        "stateful": false,
+        "replication_rpo_minutes": null,
+        "backup_rpo_minutes": null,
+        "telemetry": ["metrics", "logs", "alerts"]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "east-region-loss",
+        "name": "East US regional outage",
+        "kind": "region_outage",
+        "target": "eastus",
+        "duration_minutes": 120,
+        "description": "Tests traffic failover, shared data continuity, and regional secret isolation."
+      },
+      {
+        "id": "west-region-loss",
+        "name": "West US 2 regional outage",
+        "kind": "region_outage",
+        "target": "westus2",
+        "duration_minutes": 120,
+        "description": "Proves that the second region is a real peer rather than an untested standby."
+      },
+      {
+        "id": "database-loss",
+        "name": "Cosmos DB logical service outage",
+        "kind": "component_outage",
+        "target": "cosmos",
+        "duration_minutes": 60,
+        "description": "Tests the blast radius of a shared stateful dependency and backup RPO."
+      },
+      {
+        "id": "identity-loss",
+        "name": "Identity provider outage",
+        "kind": "component_outage",
+        "target": "identity",
+        "duration_minutes": 30,
+        "description": "Tests behavior when a global dependency is unavailable."
+      },
+      {
+        "id": "edge-loss",
+        "name": "Global edge component outage",
+        "kind": "component_outage",
+        "target": "front-door",
+        "duration_minutes": 20,
+        "description": "Highlights concentration risk at the global ingress layer."
+      }
+    ]
+  }
+}
