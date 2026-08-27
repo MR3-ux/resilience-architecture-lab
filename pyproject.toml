@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resilience-architecture-lab"
+version = "0.1.0"
+description = "Model, simulate, and review cloud architecture resilience before production learns the hard way."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Micah Roberts"}]
+keywords = ["resilience", "architecture", "azure", "disaster-recovery", "rto", "rpo", "chaos-engineering"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: System :: Systems Administration",
+]
+dependencies = []
+
+[project.scripts]
+resilience-lab = "resilience_lab.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
